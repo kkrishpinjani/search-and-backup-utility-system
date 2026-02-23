@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Personal Search & Backup Utility</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            color: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 30px 0;
+            font-weight: 700;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+            padding-bottom: 40px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-blue { background: #3a7bd5; color: white; }
+        .btn-blue:hover { background: #2c5aa0; }
+
+        .btn-green { background: #00c853; color: white; }
+        .btn-green:hover { background: #009624; }
+
+        .btn-red { background: #ff1744; color: white; }
+        .btn-red:hover { background: #c4001d; }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: rgba(0,255,150,0.15);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background: rgba(255,255,255,0.1);
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .relative { position: relative; }
+
+        #suggestions {
+            background: white;
+            color: black;
+            position: absolute;
+            width: calc(100% - 30px);
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+        }
+
+        #suggestions div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #suggestions div:hover {
+            background: #eee;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>🚀 Personal Search & Backup Utility</h1>
+
+<div class="container">
+
+    {% if message %}
+        <div class="message">{{ message }}</div>
+    {% endif %}
+
+    <!-- SCAN PANEL -->
+    <div class="card">
+        <h2>📂 Scan Folder</h2>
+        <form method="POST">
+            <input type="text" name="folder" placeholder="Enter full folder path">
+            <button class="btn-blue" type="submit" name="scan">Scan Directory</button>
+        </form>
+    </div>
+
+    <!-- SEARCH PANEL -->
+    <div class="card">
+        <h2>🔎 Advanced Search</h2>
+        <form method="POST">
+
+            <div class="relative">
+                <input type="text" id="searchInput" name="name" placeholder="Search file name">
+                <div id="suggestions"></div>
+            </div>
+
+            <input type="text" name="extension" placeholder="Extension (.pdf)">
+            <input type="number" name="min_size" placeholder="Min Size (bytes)">
+            <input type="number" name="max_size" placeholder="Max Size (bytes)">
+            <input type="date" name="start_date">
+            <input type="date" name="end_date">
+
+            <select name="sort_by">
+                <option value="name">Sort by Name</option>
+                <option value="size">Sort by Size</option>
+                <option value="modified">Sort by Date</option>
+            </select>
+
+            <button class="btn-green" type="submit" name="search">Search</button>
+        </form>
+
+        {% if results %}
+        <h3>Results:</h3>
+        <form method="POST">
+            <table>
+                <tr>
+                    <th>Select</th>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Modified</th>
+                </tr>
+
+                {% for file in results %}
+                <tr>
+                    <td><input type="checkbox" name="file_ids" value="{{ file[0] }}"></td>
+                    <td>{{ file[1] }}</td>
+                    <td>{{ file[3] }} bytes</td>
+                    <td>{{ file[5] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            <br>
+            <button class="btn-blue" type="submit" name="backup">Create Backup (ZIP)</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- RESTORE PANEL -->
+    <div class="card">
+        <h2>♻ Restore Backup</h2>
+        <form method="POST">
+            <input type="text" name="zip_path" placeholder="Enter ZIP file path">
+            <input type="text" name="restore_path" placeholder="Enter restore directory">
+            <label>
+                <input type="checkbox" name="overwrite"> Overwrite existing files
+            </label>
+            <br><br>
+            <button class="btn-red" type="submit" name="restore">Restore</button>
+        </form>
+    </div>
+
+    <!-- BACKUP HISTORY PANEL -->
+    <div class="card">
+        <h2>📦 Backup History</h2>
+
+        {% if backups %}
+        <table>
+            <tr>
+                <th>Backup File</th>
+                <th>Created At</th>
+            </tr>
+            {% for b in backups %}
+            <tr>
+                <td>{{ b[1] }}</td>
+                <td>{{ b[2] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <p>No backups created yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- RESTORE HISTORY PANEL -->
+    <div class="card">
+        <h2>♻ Restore History</h2>
+
+        {% if restores %}
+        <table>
+            <tr>
+                <th>ZIP File</th>
+                <th>Restored To</th>
+                <th>Date</th>
+            </tr>
+            {% for r in restores %}
+            <tr>
+                <td>{{ r[1] }}</td>
+                <td>{{ r[2] }}</td>
+                <td>{{ r[3] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <p>No restore operations yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+const input = document.getElementById("searchInput");
+const suggestions = document.getElementById("suggestions");
+
+input.addEventListener("keyup", function() {
+    fetch("/suggest?q=" + input.value)
+        .then(res => res.json())
+        .then(data => {
+            suggestions.innerHTML = "";
+            if (data.length > 0 && input.value.length > 0) {
+                suggestions.style.display = "block";
+                data.forEach(item => {
+                    const div = document.createElement("div");
+                    div.innerText = item;
+                    div.onclick = () => {
+                        input.value = item;
+                        suggestions.style.display = "none";
+                    };
+                    suggestions.appendChild(div);
+                });
+            } else {
+                suggestions.style.display = "none";
+            }
+        });
+});
+</script>
+
+</body>
+</html>
