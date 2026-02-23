@@ -1,0 +1,43 @@
+/* Minor UI polish */
+.tableWrap { border-radius: 12px; }
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
+
+/* Make long paths wrap nicely */
+td { vertical-align: middle; }
+td.mono { word-break: break-all; }
+
+/* Selected row highlight */
+tr.row-selected {
+  background: rgba(25, 135, 84, 0.10) !important;
+}
+
+/* Autocomplete */
+.suggestWrap { position: relative; }
+
+.suggestBox {
+  position: absolute;
+  top: 76px;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  max-height: 260px;
+  overflow: auto;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+.suggestItem {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.suggestItem:hover { background: #f3f7ff; }
+
+.sticky-top { top: 0; }
