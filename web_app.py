@@ -1,5 +1,7 @@
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
+import tkinter as tk
+from tkinter import filedialog
 
 import config
 import db as dbmod
@@ -14,6 +16,16 @@ def get_conn():
     conn = dbmod.connect(config.DB_PATH)
     dbmod.init_db(conn, Path(__file__).parent / "schema.sql")
     return conn
+
+@app.get("/api/browse")
+def api_browse():
+    # This opens a real OS folder picker window
+    root = tk.Tk()
+    root.withdraw()  # Hide the main tkinter window
+    root.attributes('-topmost', True) # Bring picker to front
+    folder_selected = filedialog.askdirectory()
+    root.destroy()
+    return jsonify({"path": folder_selected})
 
 @app.get("/")
 def home():

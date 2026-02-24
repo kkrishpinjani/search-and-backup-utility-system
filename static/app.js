@@ -4,6 +4,18 @@ function tsToLocal(ts) {
   return d.toLocaleString();
 }
 
+async function browseFolder() {
+  try {
+    const res = await fetch("/api/browse");
+    const data = await res.json();
+    if (data.path) {
+      document.getElementById("scanRoot").value = data.path;
+    }
+  } catch (e) {
+    console.error("Failed to open folder picker", e);
+  }
+}
+
 function dateToTs(dateStr, endOfDay=false) {
   if (!dateStr) return null;
   const d = new Date(dateStr + "T00:00:00");
