@@ -136,6 +136,7 @@ search_backup_utility/
 ├── restore_engine.py       # Restore functionality
 ├── db.py                   # Database connection
 ├── schema.sql              # Database schema
+├── app.db                  # SQLite database
 │
 ├── templates/
 │   └── index.html          # Web UI
@@ -145,7 +146,6 @@ search_backup_utility/
 │   └── styles.css          # Styling
 │
 ├── data/
-│   ├── app.db              # SQLite database
 │   └── backups/            # Generated ZIP files
 │
 ├── requirements.txt
@@ -210,7 +210,7 @@ http://127.0.0.1:5000
 
 ### Step 1 — Scan Directory
 
-1. Enter folder path
+1. Choose folder path
 2. Click **Scan**
 3. Files will be indexed
 
