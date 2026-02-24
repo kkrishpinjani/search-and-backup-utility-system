@@ -1,90 +1,316 @@
-Personal Search & Backup Utility System
+# Personal Search & Backup Utility
 
-A comprehensive file management utility built with Python (Flask) and SQLite. This system allows users to index local directories, perform advanced metadata searches, create compressed ZIP backups, and restore files with intelligent conflict resolution.
+## 📌 Project Overview
 
-🌟 Key Features
+The **Personal Search & Backup Utility** is a web-based file management system that allows users to:
 
-Recursive File Scanning: Deep-scan local directories to index file metadata (name, path, size, extension, modified date).
+* Scan and index files from a selected directory
+* Search files using multiple filters (name, extension, size, date)
+* Get intelligent search recommendations (autocomplete suggestions)
+* Select files/folders from search results and create backups
+* Generate backups in **ZIP format**
+* Restore backups to any target directory with overwrite handling
+* Maintain backup and restore history using a database
 
-Advanced Search Engine: Filter files by name, extension, size ranges, and modification dates with real-time suggestions.
+The application provides a clean and responsive web interface built with **Flask** and **Bootstrap**.
 
-Native OS Integration: Includes a built-in folder picker for easy directory selection without manual typing.
+This project was developed as part of an internship assignment focusing on file system utilities, backup systems, and database integration.
 
-Secure ZIP Backups: Standardized compression for selected files and folders with full history logging.
+---
 
-Intelligent Restoration: Restore backups to any location with three conflict modes: Skip, Overwrite, or Rename (auto-versioning).
+## 🚀 Features
 
-Hash-Based Detection: Optional SHA256 hashing to identify unique file content and support incremental-ready logic.
+### 1. File Scanning & Indexing
 
-🛠️ Tech Stack
+* Recursively scans directories
+* Stores metadata:
 
-Backend: Python 3.10+, Flask
+  * File name
+  * Full path
+  * Size
+  * Extension
+  * Last modified time
+  * Optional SHA-256 hash
+* Only files from the **latest scanned directory** are used for search and recommendations
 
-Database: SQLite3 (Relational storage for metadata and history)
+---
 
-Frontend: HTML5, CSS3 (Bootstrap 5), JavaScript (Vanilla ES6+)
+### 2. Advanced File Search
 
-OS Bridge: tkinter (Native folder browsing)
+Supports multiple filters:
 
-📂 Project Structure
+* Name contains (partial search)
+* Extension filter
+* File size range
+* Modified date range
+* Sorting:
 
-Plaintext
-├── data/               # Stores app.db and generated ZIP backups
-├── static/             # Frontend assets (styles.css, app.js)
-├── templates/          # HTML templates (index.html)
-├── backup_engine.py    # ZIP creation and metadata logging
-├── restore_engine.py   # Extraction logic and conflict handling
-├── scanner.py          # Recursive walker and metadata extractor
-├── search_engine.py    # Database queries and filters
-├── web_app.py          # Flask routes and API endpoints
-├── db.py               # Database connection and initialization
-├── schema.sql          # SQLite table definitions
-├── config.py           # Global paths and configuration
-└── utils.py            # Hashing and timestamp helpers
+  * Name
+  * Size
+  * Extension
+  * Date
+* Ascending / Descending
+* Result limit
 
-🚀 Getting Started
-1. Installation
-Ensure you have Python 3.10 or higher installed.
+---
 
-Bash
-# Clone the project
+### 3. Search Recommendations (Autocomplete)
+
+* Real-time suggestions while typing
+* Shows file name + path
+* Suggestions restricted to the **current scanned directory**
+
+---
+
+### 4. Backup System
+
+* Backup created from **selected files/folders** in search results
+* Backup format: **ZIP**
+* Preserves directory structure
+* Optional hash detection
+* Backup metadata stored in database
+* Notes can be added to backups
+
+---
+
+### 5. Restore System
+
+* Restore any backup ZIP to a specified directory
+* Handles file conflicts using modes:
+
+  * `skip` — keep existing files
+  * `overwrite` — replace files
+  * `rename` — create new name (file(1).ext)
+* Restore history stored in database
+
+---
+
+### 6. History Management
+
+* Backup history
+* Restore history
+* Metadata includes:
+
+  * Timestamp
+  * Source path
+  * Target path
+  * ZIP location
+  * Notes
+  * Mode used
+
+---
+
+### 7. Modern Web Interface
+
+* Bootstrap-based UI
+* Responsive layout
+* Card-based design
+* Highlight selected rows
+* Result counters
+* Alerts and feedback messages
+
+---
+
+## 🏗️ Technology Stack
+
+| Component     | Technology                       |
+| ------------- | -------------------------------- |
+| Backend       | Python                           |
+| Web Framework | Flask                            |
+| Frontend      | HTML, CSS, JavaScript, Bootstrap |
+| Database      | SQLite                           |
+| Backup Format | ZIP                              |
+| Hashing       | SHA-256 (optional)               |
+
+---
+
+## 📂 Project Structure
+
+```
+search_backup_utility/
+│
+├── web_app.py              # Flask application
+├── scanner.py              # File scanning & indexing
+├── search_engine.py        # Search logic
+├── backup_engine.py        # Backup creation
+├── restore_engine.py       # Restore functionality
+├── db.py                   # Database connection
+├── schema.sql              # Database schema
+│
+├── templates/
+│   └── index.html          # Web UI
+│
+├── static/
+│   ├── app.js              # Frontend logic
+│   └── styles.css          # Styling
+│
+├── data/
+│   ├── app.db              # SQLite database
+│   └── backups/            # Generated ZIP files
+│
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ⚙️ Installation & Setup
+
+### 1. Clone or Download Project
+
+```
+git clone <repository-url>
 cd search_backup_utility
+```
 
-# Create a virtual environment
-python -m venv venv
+Or extract ZIP file.
 
-# Activate the environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
+---
 
-# Install requirements (if any)
+### 2. Create Virtual Environment
+
+Windows:
+
+```
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+
+---
+
+### 3. Install Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+If requirements file is missing:
+
+```
 pip install flask
-2. Running the Application
-Bash
+```
+
+---
+
+### 4. Run Application
+
+```
 python web_app.py
-The app will start at http://127.0.0.1:5000
+```
 
-📖 Usage Instructions
-Index Files: In the Scan section, click the "Browse" button to select a folder. Click Scan to index all files into the database.
+Open browser:
 
-Search: Use the Search tab to find files. You can filter by extension (e.g., .pdf) or size.
+```
+http://127.0.0.1:5000
+```
 
-Backup: Select specific files from your search results and click Backup Selected to create a ZIP archive.
+---
 
-Restore: Navigate to the History tab to see past backups. Select a target directory and a conflict mode to restore your files.
+## 📖 Usage Guide
 
-📊 Database Design
-The system uses four primary tables to ensure data integrity:
+### Step 1 — Scan Directory
 
-files: Stores indexed metadata for fast searching.
+1. Enter folder path
+2. Click **Scan**
+3. Files will be indexed
 
-backups: Stores high-level data about each ZIP archive created.
+Example:
 
-backup_items: Links specific files to their respective ZIP archives.
+```
+D:\testdata_backup_demo
+```
 
-restores: Logs every restoration event for audit purposes.
+---
 
-🛡️ Academic Integrity
-This project was developed independently as part of the Internship Assignment. All core logic for scanning, searching, and ZIP management is original code, designed to meet the specified functional and performance criteria.
+### Step 2 — Search Files
+
+* Enter name or filters
+* Click **Search**
+* Select files using checkboxes
+
+---
+
+### Step 3 — Create Backup
+
+* Select files from results
+* Click **Create ZIP from selected**
+* Backup ID will be generated
+
+---
+
+### Step 4 — Restore Backup
+
+* Enter Backup ID
+* Enter target directory
+* Select overwrite mode
+* Click **Restore**
+
+---
+
+## 🧪 Test Data Creation (Optional)
+
+PowerShell example:
+
+```
+mkdir D:\testdata_demo
+"hello" > D:\testdata_demo\a.txt
+"world" > D:\testdata_demo\b.txt
+mkdir D:\testdata_demo\sub
+"test" > D:\testdata_demo\sub\c.log
+```
+
+---
+
+## 🗄️ Database Schema Overview
+
+### Files Table
+
+Stores indexed file metadata.
+
+### Backups Table
+
+Stores backup information and ZIP path.
+
+### Backup Items Table
+
+Maps files included in backups.
+
+### Restores Table
+
+Stores restore operations history.
+
+---
+
+## 🔒 Design Decisions
+
+* SQLite chosen for lightweight local storage
+* ZIP used for portability and compression
+* Flask for simplicity and rapid development
+* Modular architecture for maintainability
+* Context-based indexing for accurate search scope
+
+---
+
+## 🚧 Future Enhancements
+
+* Scheduled backups
+* Encryption support
+* Full-text search
+* Docker deployment
+* Cloud storage integration
+
+---
+
+## 👨‍💻 Author
+
+Developed by:
+
+**Vineet Savle**
+
+Internship Project — Personal Search & Backup Utility
+
+---
+
+## 📜 License
+
+This project is developed for educational and internship evaluation purposes.
