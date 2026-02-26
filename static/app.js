@@ -178,16 +178,33 @@ async function scan() {
     showMsg("scanOut", "Scanning... please wait", "info");
     const root = document.getElementById("scanRoot").value.trim();
     const compute_hash = document.getElementById("scanHash").checked;
+    
     const data = await postJSON("/api/scan", {root, compute_hash});
+    
+    // 1. Clear UI tables so old results disappear
+    const searchBody = document.querySelector("#resultsTable tbody");
+    if (searchBody) searchBody.innerHTML = "";
+    
+    const badge = document.getElementById("resultCount");
+    if (badge) badge.textContent = "0";
+
+    // 2. Refresh history tables (now they will be empty)
+    await loadBackups();
+    await loadRestores();
+
+    // ✅ 3. UPDATE THE BACKUP PATH AUTOMATICALLY
+    // This finds the "Root for Arcname" box and fills it with the path you just scanned
+    const selRoot = document.getElementById("selRoot");
+    if (selRoot) {
+        selRoot.value = root; 
+    }
+
     showMsg("scanOut", `Scan complete. Indexed ${data.indexed} files.`, "success");
 
-    const selRoot = document.getElementById("selRoot");
-    if (selRoot && !selRoot.value.trim()) selRoot.value = root;
   } catch (e) {
     showMsg("scanOut", e.message, "danger");
   }
 }
-
 function clearSearch() {
   document.getElementById("qName").value = "";
   document.getElementById("qExt").value = "";
@@ -292,7 +309,7 @@ async function loadBackups() {
       <td class="fw-semibold">${b.id}</td>
       <td>${escapeHtml(tsToLocal(b.created_ts))}</td>
       <td class="mono">${escapeHtml(b.source_path)}</td>
-      <td>${b.incremental ? "yes" : "no"}</td>
+      <td class="small text-muted">${escapeHtml(b.file_list || "No files")}</td> <td>${b.incremental ? "yes" : "no"}</td>
       <td class="mono">${escapeHtml(b.zip_path)}</td>
       <td>${escapeHtml(b.notes || "")}</td>
     `;

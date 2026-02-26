@@ -140,9 +140,16 @@ def create_backup_zip(
         notes=notes,
     )
 
-def list_backups(conn: sqlite3.Connection, limit: int = 20):
-    rows = conn.execute(
-        "SELECT id, created_ts, zip_path, source_path, incremental, notes FROM backups ORDER BY created_ts DESC LIMIT ?",
-        (limit,),
-    ).fetchall()
+def list_backups(conn, limit=20):
+    # This query uses GROUP_CONCAT to turn a list of files into a single string
+    query = """
+        SELECT b.id, b.created_ts, b.zip_path, b.source_path, b.incremental, b.notes,
+               GROUP_CONCAT(bi.arcname, ', ') as file_list
+        FROM backups b
+        LEFT JOIN backup_items bi ON b.id = bi.backup_id
+        GROUP BY b.id
+        ORDER BY b.created_ts DESC
+        LIMIT ?
+    """
+    rows = conn.execute(query, (limit,)).fetchall()
     return [dict(r) for r in rows]

@@ -46,6 +46,11 @@ def api_scan():
     conn = get_conn()
     count = 0
     try:
+        conn.execute("DELETE FROM backup_items") # Clean up linked items too
+        conn.execute("DELETE FROM restores")
+        conn.execute("DELETE FROM files") 
+        conn.execute("DELETE FROM backups")
+        
         for rec in scan_directory(root_path, compute_hash=compute_hash):
             dbmod.upsert_file(conn, rec)
             count += 1
@@ -182,8 +187,12 @@ def api_backup():
 def api_backups():
     conn = get_conn()
     try:
+        # This calls the function in backup_engine.py that we just updated
         rows = list_backups(conn, limit=200)
         return jsonify({"ok": True, "backups": rows})
+    except Exception as e:
+        print(f"Error loading backups: {e}")
+        return jsonify({"ok": False, "error": str(e)}), 500
     finally:
         conn.close()
 
