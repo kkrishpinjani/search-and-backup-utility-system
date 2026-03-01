@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PC File Search</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        nav a { margin-right: 20px; }
+        #dropdown div {
+            border: 1px solid #ccc;
+            padding: 5px;
+            cursor: pointer;
+        }
+        #dropdown div:hover {
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+
+<h1>PC File Search System 🔥</h1>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/scan">Scan PC</a>
+    <a href="/search">Search Files</a>
+</nav>
+
+<hr>
+
+{% block content %}{% endblock %}
+
+</body>
+</html>
