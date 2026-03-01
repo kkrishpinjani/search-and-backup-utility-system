@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Search Files</h2>
+
+<input type="text" id="searchBox"
+       placeholder="Type file name (e.g. spiderman)">
+<div id="dropdown"></div>
+
+<hr>
+
+<div id="results"></div>
+
+<script>
+const box = document.getElementById("searchBox");
+const dropdown = document.getElementById("dropdown");
+const resultsDiv = document.getElementById("results");
+
+box.addEventListener("input", async () => {
+    let query = box.value;
+
+    if(query.length < 2){
+        dropdown.innerHTML = "";
+        resultsDiv.innerHTML = "";
+        return;
+    }
+
+    let res = await fetch(`/autocomplete?q=${query}`);
+    let data = await res.json();
+
+    dropdown.innerHTML = "";
+
+    data.forEach(name => {
+        let div = document.createElement("div");
+        div.innerText = name;
+
+        div.onclick = async () => {
+            box.value = name;
+            dropdown.innerHTML = "";
+
+            let detailRes =
+                await fetch(`/file_details?name=${name}`);
+            let detailData = await detailRes.json();
+
+            resultsDiv.innerHTML = "";
+
+            detailData.forEach(file => {
+                resultsDiv.innerHTML += `
+                    <p>
+                        <strong>Name:</strong> ${file.name}<br>
+                        <strong>Path:</strong> ${file.path}<br>
+                        <strong>Size:</strong> ${file.size} bytes<br>
+                        <strong>Date:</strong> ${file.modified_date}
+                    </p>
+                    <hr>
+                `;
+            });
+        };
+
+        dropdown.appendChild(div);
+    });
+});
+</script>
+
+{% endblock %}
