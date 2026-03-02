@@ -1,289 +1,277 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Personal Search & Backup Utility</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Enterprise Backup Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
         body {
             margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #141e30, #243b55);
-            color: #fff;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f6f9;
+            display: flex;
         }
 
-        h1 {
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 230px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 20px;
+        }
+
+        .sidebar h2 {
             text-align: center;
-            padding: 30px 0;
-            font-weight: 700;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: auto;
-            padding-bottom: 40px;
-        }
-
-        .card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(15px);
-            border-radius: 15px;
-            padding: 25px;
+            font-size: 18px;
             margin-bottom: 30px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
 
-        h2 {
-            margin-top: 0;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            margin-top: 8px;
-            margin-bottom: 15px;
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #cbd5e1;
+            text-decoration: none;
             font-size: 14px;
         }
 
-        button {
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: none;
+        .sidebar a:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* ===== MAIN ===== */
+        .main {
+            margin-left: 230px;
+            width: 100%;
+        }
+
+        .header {
+            background: white;
+            padding: 18px 30px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            font-size: 18px;
             font-weight: 600;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+
+        h3 {
+            margin-top: 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
-            transition: 0.3s;
+            font-size: 14px;
         }
 
-        .btn-blue { background: #3a7bd5; color: white; }
-        .btn-blue:hover { background: #2c5aa0; }
-
-        .btn-green { background: #00c853; color: white; }
-        .btn-green:hover { background: #009624; }
-
-        .btn-red { background: #ff1744; color: white; }
-        .btn-red:hover { background: #c4001d; }
-
-        .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            background: rgba(0,255,150,0.15);
-        }
+        .primary { background: #2563eb; color: white; }
+        .success { background: #16a34a; color: white; }
+        .danger  { background: #dc2626; color: white; }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            font-size: 14px;
+            margin-top: 15px;
         }
 
         th {
-            background: rgba(255,255,255,0.1);
-        }
-
-        tr:hover {
-            background: rgba(255,255,255,0.08);
-        }
-
-        .relative { position: relative; }
-
-        #suggestions {
-            background: white;
-            color: black;
-            position: absolute;
-            width: calc(100% - 30px);
-            max-height: 150px;
-            overflow-y: auto;
-            border-radius: 8px;
-            display: none;
-            z-index: 1000;
-        }
-
-        #suggestions div {
+            background: #f3f4f6;
             padding: 10px;
-            cursor: pointer;
+            text-align: left;
         }
 
-        #suggestions div:hover {
-            background: #eee;
+        td {
+            padding: 8px;
+            border-top: 1px solid #e5e7eb;
         }
 
+        .message {
+            background: #d1fae5;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            color: #065f46;
+        }
     </style>
 </head>
-
 <body>
 
-<h1>🚀 Personal Search & Backup Utility</h1>
-
-<div class="container">
-
-    {% if message %}
-        <div class="message">{{ message }}</div>
-    {% endif %}
-
-    <!-- SCAN PANEL -->
-    <div class="card">
-        <h2>📂 Scan Folder</h2>
-        <form method="POST">
-            <input type="text" name="folder" placeholder="Enter full folder path">
-            <button class="btn-blue" type="submit" name="scan">Scan Directory</button>
-        </form>
-    </div>
-
-    <!-- SEARCH PANEL -->
-    <div class="card">
-        <h2>🔎 Advanced Search</h2>
-        <form method="POST">
-
-            <div class="relative">
-                <input type="text" id="searchInput" name="name" placeholder="Search file name">
-                <div id="suggestions"></div>
-            </div>
-
-            <input type="text" name="extension" placeholder="Extension (.pdf)">
-            <input type="number" name="min_size" placeholder="Min Size (bytes)">
-            <input type="number" name="max_size" placeholder="Max Size (bytes)">
-            <input type="date" name="start_date">
-            <input type="date" name="end_date">
-
-            <select name="sort_by">
-                <option value="name">Sort by Name</option>
-                <option value="size">Sort by Size</option>
-                <option value="modified">Sort by Date</option>
-            </select>
-
-            <button class="btn-green" type="submit" name="search">Search</button>
-        </form>
-
-        {% if results %}
-        <h3>Results:</h3>
-        <form method="POST">
-            <table>
-                <tr>
-                    <th>Select</th>
-                    <th>Name</th>
-                    <th>Size</th>
-                    <th>Modified</th>
-                </tr>
-
-                {% for file in results %}
-                <tr>
-                    <td><input type="checkbox" name="file_ids" value="{{ file[0] }}"></td>
-                    <td>{{ file[1] }}</td>
-                    <td>{{ file[3] }} bytes</td>
-                    <td>{{ file[5] }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-            <br>
-            <button class="btn-blue" type="submit" name="backup">Create Backup (ZIP)</button>
-        </form>
-        {% endif %}
-    </div>
-
-    <!-- RESTORE PANEL -->
-    <div class="card">
-        <h2>♻ Restore Backup</h2>
-        <form method="POST">
-            <input type="text" name="zip_path" placeholder="Enter ZIP file path">
-            <input type="text" name="restore_path" placeholder="Enter restore directory">
-            <label>
-                <input type="checkbox" name="overwrite"> Overwrite existing files
-            </label>
-            <br><br>
-            <button class="btn-red" type="submit" name="restore">Restore</button>
-        </form>
-    </div>
-
-    <!-- BACKUP HISTORY PANEL -->
-    <div class="card">
-        <h2>📦 Backup History</h2>
-
-        {% if backups %}
-        <table>
-            <tr>
-                <th>Backup File</th>
-                <th>Created At</th>
-            </tr>
-            {% for b in backups %}
-            <tr>
-                <td>{{ b[1] }}</td>
-                <td>{{ b[2] }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-        {% else %}
-            <p>No backups created yet.</p>
-        {% endif %}
-    </div>
-
-    <!-- RESTORE HISTORY PANEL -->
-    <div class="card">
-        <h2>♻ Restore History</h2>
-
-        {% if restores %}
-        <table>
-            <tr>
-                <th>ZIP File</th>
-                <th>Restored To</th>
-                <th>Date</th>
-            </tr>
-            {% for r in restores %}
-            <tr>
-                <td>{{ r[1] }}</td>
-                <td>{{ r[2] }}</td>
-                <td>{{ r[3] }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-        {% else %}
-            <p>No restore operations yet.</p>
-        {% endif %}
-    </div>
-
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar">
+    <h2>Backup System</h2>
+    <a href="#scan">Scan Folder</a>
+    <a href="#search">Search Files</a>
+    <a href="#restore">Restore Backup</a>
+    <a href="#history">Backup History</a>
 </div>
 
-<script>
-const input = document.getElementById("searchInput");
-const suggestions = document.getElementById("suggestions");
+<!-- ===== MAIN ===== -->
+<div class="main">
 
-input.addEventListener("keyup", function() {
-    fetch("/suggest?q=" + input.value)
-        .then(res => res.json())
-        .then(data => {
-            suggestions.innerHTML = "";
-            if (data.length > 0 && input.value.length > 0) {
-                suggestions.style.display = "block";
-                data.forEach(item => {
-                    const div = document.createElement("div");
-                    div.innerText = item;
-                    div.onclick = () => {
-                        input.value = item;
-                        suggestions.style.display = "none";
-                    };
-                    suggestions.appendChild(div);
-                });
-            } else {
-                suggestions.style.display = "none";
-            }
-        });
-});
-</script>
+    <div class="header">
+        Enterprise File Backup & Restore Dashboard
+    </div>
+
+    <div class="content">
+
+        {% if message %}
+        <div class="message">{{ message }}</div>
+        {% endif %}
+
+        <!-- ===== SCAN SECTION ===== -->
+        <div class="card" id="scan">
+            <h3>Scan Folder</h3>
+
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file"
+                       id="folderInput"
+                       name="folder_files"
+                       webkitdirectory
+                       directory
+                       multiple
+                       required
+                       style="display:none;">
+
+                <button type="button"
+                        class="primary"
+                        onclick="document.getElementById('folderInput').click();">
+                    Browse Folder
+                </button>
+
+                <br><br>
+
+                <button type="submit" name="scan" class="success">
+                    Scan Folder
+                </button>
+            </form>
+        </div>
+
+        <!-- ===== SEARCH SECTION ===== -->
+        <div class="card" id="search">
+            <h3>Search Files</h3>
+
+            <form method="POST">
+                <input type="text" name="name" placeholder="Enter file name to search">
+                <button type="submit" name="search" class="primary">
+                    Search
+                </button>
+            </form>
+
+            {% if files and files|length > 0 %}
+            <form method="POST">
+
+                <table>
+                    <tr>
+                        <th>Select</th>
+                        <th>Name</th>
+                        <th>Path</th>
+                        <th>Size</th>
+                        <th>Extension</th>
+                    </tr>
+
+                    {% for file in files %}
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   name="selected_files"
+                                   value="{{ file[0] }}">
+                        </td>
+                        <td>{{ file[1] }}</td>
+                        <td>{{ file[2] }}</td>
+                        <td>{{ file[3] }}</td>
+                        <td>{{ file[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+
+                <br>
+
+                <input type="text"
+                       name="backup_title"
+                       placeholder="Enter Backup Title">
+
+                <button type="submit"
+                        name="backup_selected"
+                        class="success">
+                    Create Backup
+                </button>
+
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- ===== RESTORE SECTION ===== -->
+        <div class="card" id="restore">
+            <h3>Restore Backup</h3>
+
+            <form method="POST">
+                <input type="text"
+                       name="restore_title"
+                       placeholder="Enter Backup Title to Restore">
+
+                <button type="submit"
+                        name="restore"
+                        class="primary">
+                    Restore Backup
+                </button>
+            </form>
+        </div>
+
+        <!-- ===== BACKUP HISTORY (ALWAYS VISIBLE) ===== -->
+        <div class="card" id="history">
+            <h3>Backup History</h3>
+
+            {% if backup_history and backup_history|length > 0 %}
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for backup in backup_history %}
+                    <tr>
+                        <td>{{ backup[0] }}</td>
+                        <td>{{ backup[1] }}</td>
+                        <td>{{ backup[2] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% else %}
+                <p>No backups created yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
 
 </body>
 </html>

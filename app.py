@@ -1,112 +1,149 @@
-from flask import Flask, render_template, request, jsonify
-from database import create_tables, connect
-from scanner import scan_directory
-from search import search_files
-from backup import create_backup
-from restore import restore_backup
+import os
+import sqlite3
+import zipfile
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
-create_tables()
+
+# ================= BASE DIRECTORY (Portable) =================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DATABASE = os.path.join(BASE_DIR, "data.db")
+
+conn = sqlite3.connect(DATABASE, check_same_thread=False)
+cursor = conn.cursor()
+
+# ================= TABLES =================
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    path TEXT,
+    size INTEGER,
+    extension TEXT,
+    modified TEXT
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS backups (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT,
+    created_at TEXT
+)
+""")
+
+conn.commit()
+
+# ================= FOLDERS =================
+BACKUP_FOLDER = os.path.join(BASE_DIR, "backups")
+EXTRACT_FOLDER = os.path.join(BASE_DIR, "Extracts")
+
+os.makedirs(BACKUP_FOLDER, exist_ok=True)
+os.makedirs(EXTRACT_FOLDER, exist_ok=True)
 
 
 @app.route("/", methods=["GET", "POST"])
-def home():
+def index():
 
-    results = []
     message = ""
-
-    conn = connect()
-    cursor = conn.cursor()
+    files = []
 
     if request.method == "POST":
 
         # ================= SCAN =================
         if "scan" in request.form:
-            folder = request.form.get("folder")
 
-            if folder:
-                try:
-                    files, dirs = scan_directory(folder)
-                    message = (
-                        f"Scan completed successfully! "
-                        f"📁 {dirs} directories and 📄 {files} files scanned."
-                    )
-                except Exception as e:
-                    message = f"Scan Error: {str(e)}"
+            uploaded_files = request.files.getlist("folder_files")
+
+            if uploaded_files:
+                cursor.execute("DELETE FROM files")
+
+                for file in uploaded_files:
+                    if file.filename == "":
+                        continue
+
+                    relative_path = file.filename.replace("\\", "/")
+                    name = relative_path.split("/")[-1]
+                    extension = "." + name.split(".")[-1] if "." in name else ""
+                    size = len(file.read())
+                    file.seek(0)
+
+                    cursor.execute("""
+                        INSERT INTO files (name, path, size, extension, modified)
+                        VALUES (?, ?, ?, ?, datetime('now'))
+                    """, (name, relative_path, size, extension))
+
+                conn.commit()
+                message = "Scan completed successfully."
 
         # ================= SEARCH =================
-        if "search" in request.form:
-            results = search_files(
-                request.form.get("name"),
-                request.form.get("extension"),
-                request.form.get("min_size"),
-                request.form.get("max_size"),
-                request.form.get("start_date"),
-                request.form.get("end_date"),
-                request.form.get("sort_by")
-            )
+        elif "search" in request.form:
+            name = request.form.get("name", "")
+            cursor.execute("SELECT * FROM files WHERE name LIKE ?", (f"%{name}%",))
+            files = cursor.fetchall()
 
-        # ================= BACKUP =================
-        if "backup" in request.form:
-            selected_ids = request.form.getlist("file_ids")
+        # ================= BACKUP (ONLY FILE NAME) =================
+        elif "backup_selected" in request.form:
 
-            if selected_ids:
-                try:
-                    backup_name = create_backup(selected_ids)
-                    message = f"Backup created successfully: {backup_name}"
-                except Exception as e:
-                    message = f"Backup Error: {str(e)}"
+            selected_ids = request.form.getlist("selected_files")
+            title = request.form.get("backup_title", "").strip()
+
+            if not title:
+                message = "Please enter backup title."
+
+            elif not selected_ids:
+                message = "No files selected."
+
             else:
-                message = "Please select files to backup."
+                cursor.execute(
+                    f"SELECT * FROM files WHERE id IN ({','.join(['?']*len(selected_ids))})",
+                    selected_ids
+                )
+                selected_files = cursor.fetchall()
+
+                zip_path = os.path.join(BACKUP_FOLDER, f"{title}.zip")
+
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                    for file in selected_files:
+                        file_name = file[1]  # ONLY FILE NAME
+                        zf.writestr(file_name, f"Backup copy of {file_name}")
+
+                cursor.execute(
+                    "INSERT INTO backups (title, created_at) VALUES (?, datetime('now'))",
+                    (title,)
+                )
+                conn.commit()
+
+                message = f"Backup '{title}' created successfully."
 
         # ================= RESTORE =================
-        if "restore" in request.form:
-            zip_path = request.form.get("zip_path")
-            restore_path = request.form.get("restore_path")
-            overwrite = request.form.get("overwrite") == "on"
+        elif "restore" in request.form:
 
-            try:
-                result = restore_backup(zip_path, restore_path, overwrite)
-                message = result
-            except Exception as e:
-                message = f"Restore Error: {str(e)}"
+            title = request.form.get("restore_title", "").strip()
 
-    # ================= LOAD HISTORY =================
-    cursor.execute("SELECT * FROM backup_history ORDER BY id DESC")
-    backups = cursor.fetchall()
+            zip_path = os.path.join(BACKUP_FOLDER, f"{title}.zip")
 
-    cursor.execute("SELECT * FROM restore_history ORDER BY id DESC")
-    restores = cursor.fetchall()
+            if not os.path.exists(zip_path):
+                message = "Backup title not found."
 
-    conn.close()
+            else:
+                restore_path = os.path.join(EXTRACT_FOLDER, title)
+                os.makedirs(restore_path, exist_ok=True)
 
-    return render_template(
-        "index.html",
-        results=results,
-        backups=backups,
-        restores=restores,
-        message=message
-    )
+                with zipfile.ZipFile(zip_path, 'r') as zf:
+                    zf.extractall(restore_path)
 
+                message = f"Backup '{title}' restored inside Extracts folder."
 
-# ================= GOOGLE STYLE SUGGESTION =================
-@app.route("/suggest")
-def suggest():
-    query = request.args.get("q", "")
+    # ================= BACKUP HISTORY =================
+    cursor.execute("SELECT * FROM backups ORDER BY id DESC")
+    backup_history = cursor.fetchall()
 
-    conn = connect()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT name FROM files
-        WHERE name LIKE ?
-        LIMIT 5
-    """, (f"%{query}%",))
-
-    results = [row[0] for row in cursor.fetchall()]
-    conn.close()
-
-    return jsonify(results)
+    return render_template("index.html",
+                           message=message,
+                           files=files,
+                           backup_history=backup_history)
 
 
 if __name__ == "__main__":
